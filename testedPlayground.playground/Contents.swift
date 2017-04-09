@@ -5,7 +5,7 @@ import XCPlayground
 
 class Node<E, T:EmptyInitable>:CustomStringConvertible{
     let key:E
-    var outputs:Output<T> = Output<T>()
+    var output:T = T()
     init(_ key:E) {
         self.key = key
     }
@@ -45,11 +45,6 @@ protocol EmptyInitable{
     init()
     
 }
-struct Output<T:EmptyInitable>:EmptyInitable{
-    
-    var output:T = T()
-    
-}
 
 extension LinkedList:CustomStringConvertible{
     
@@ -58,7 +53,7 @@ extension LinkedList:CustomStringConvertible{
         var current = root
         while current != nil {
             keys.append("(\(current!.key))")
-            current = current!.outputs.output.next
+            current = current!.output.next
         }
         
         return keys.joined(separator: " -> ")
@@ -72,11 +67,11 @@ struct LinkedList<N>{
     var last:Node<N, UnaryOutput<N>>?{
         var current = root
         while current != nil {
-            if current?.outputs.output.next == nil {
+            if current?.output.next == nil {
                 return current
             }
             
-            current = current?.outputs.output.next
+            current = current?.output.next
         }
         
         return nil
@@ -88,40 +83,40 @@ struct LinkedList<N>{
             self.root = newRoot
             return
         }
-        last?.outputs.output.next = newRoot
+        last?.output.next = newRoot
     }
     
     mutating func insert(element:N, after node:Node<N, UnaryOutput<N>>){
         let newRoot = Node<N, UnaryOutput<N>>(element)
-        newRoot.outputs.output.next = node.outputs.output.next
-        node.outputs.output.next = newRoot
+        newRoot.output.next = node.output.next
+        node.output.next = newRoot
     }
     
     mutating func remove(after node:Node<N, UnaryOutput<N>>){
-        node.outputs.output.next = node.outputs.output.next?.outputs.output.next
+        node.output.next = node.output.next?.output.next
     }
     mutating func insertBeginning(_ element:N){
         let newRoot = Node<N, UnaryOutput<N>>(element)
-        newRoot.outputs.output.next = root
+        newRoot.output.next = root
         root = newRoot
     }
     mutating func removeBeginning(){
-        root = root?.outputs.output.next
+        root = root?.output.next
     }
     mutating func removeLast(){
         
-        guard let _ = root?.outputs.output.next else {
+        guard let _ = root?.output.next else {
             root = nil
             return}
         
         var current = root
         
         while current != nil {
-            if current?.outputs.output.next?.outputs.output.next == nil {
-                current?.outputs.output.next = nil
+            if current?.output.next?.output.next == nil {
+                current?.output.next = nil
                 break
             }
-            current = current?.outputs.output.next
+            current = current?.output.next
         }
         
     }
@@ -167,24 +162,24 @@ struct Traverser<T>{
         
         process(node)
         nodes.append(node)
-        traverse(node.outputs.output.left)
-        traverse(node.outputs.output.right)
+        traverse(node.output.left)
+        traverse(node.output.right)
         
     }
     
     mutating func inorder(_ node: Node<T, BinaryOutput<T>>){
         
-        traverse(node.outputs.output.left)
+        traverse(node.output.left)
         process(node)
         nodes.append(node)
-        traverse(node.outputs.output.right)
+        traverse(node.output.right)
         
     }
     
     mutating func postorder(_ node: Node<T, BinaryOutput<T>>){
         
-        traverse(node.outputs.output.left)
-        traverse(node.outputs.output.right)
+        traverse(node.output.left)
+        traverse(node.output.right)
         process(node)
         nodes.append(node)
         
@@ -216,7 +211,7 @@ struct BinaryTree<T:Comparable>{
     var numberOfLeaves:Int{
         var _numberOfLeaves = 0
         var traverser = Traverser<T>(method:.preorder, process: {node in
-            _numberOfLeaves += node.outputs.output.isLeaf ? 1 : 0
+            _numberOfLeaves += node.output.isLeaf ? 1 : 0
         })
         traverser.traverse(root)
         return _numberOfLeaves
@@ -239,7 +234,7 @@ struct BinaryTree<T:Comparable>{
     
     private func height(_ node:Node<T, BinaryOutput<T>>?) -> Int{
         guard let node = node else{return 0}
-        return 1 + max( height(node.outputs.output.left), height(node.outputs.output.right))
+        return 1 + max( height(node.output.left), height(node.output.right))
     }
     
     func search(_ element:T) -> Node<T, BinaryOutput<T>>?{
@@ -249,19 +244,19 @@ struct BinaryTree<T:Comparable>{
     private func search(_ node:Node<T, BinaryOutput<T>>?, element:T) -> Node<T, BinaryOutput<T>>?{
         guard let node = node else{return nil}
         if node.key < element
-        {return search(node.outputs.output.right, element:element)}
+        {return search(node.output.right, element:element)}
         else if node.key > element
-        {return search(node.outputs.output.left, element:element)}
+        {return search(node.output.left, element:element)}
         else {return node}
     }
     
     
     func findMax(_ node:Node<T, BinaryOutput<T>>?) -> Node<T, BinaryOutput<T>>?{
         guard let node = node else{return nil}
-        if node.outputs.output.isLeaf {
+        if node.output.isLeaf {
             return node
         }
-        return findMax(node.outputs.output.right)
+        return findMax(node.output.right)
     }
     
     func findParentOf(_ element:T) -> Node<T, BinaryOutput<T>>?{
@@ -271,17 +266,17 @@ struct BinaryTree<T:Comparable>{
     
     private func findParentOf(_ node:Node<T, BinaryOutput<T>>?, element:T) -> Node<T, BinaryOutput<T>>?{
         guard let node = node else{return nil}
-        if let left = node.outputs.output.left, left.key == element {
+        if let left = node.output.left, left.key == element {
             return node
-        }else if let right = node.outputs.output.right, right.key == element {
+        }else if let right = node.output.right, right.key == element {
             return node
         }
         
         if node.key < element{
             
-            return findParentOf(node.outputs.output.right, element: element)
+            return findParentOf(node.output.right, element: element)
         }else{
-            return findParentOf(node.outputs.output.left, element: element)
+            return findParentOf(node.output.left, element: element)
         }
         
     }
@@ -295,55 +290,55 @@ struct BinaryTree<T:Comparable>{
         guard root?.key != deletingNode.key else{
             
             let root = self.root!
-            let maxDescendant = findMax(root.outputs.output.left)
+            let maxDescendant = findMax(root.output.left)
             let maxDescendentParent = findParentOf(maxDescendant!.key)
-            maxDescendant?.outputs.output.right = root.outputs.output.right
-            if maxDescendant?.key != maxDescendentParent?.outputs.output.left?.key{
-                maxDescendant?.outputs.output.left = root.outputs.output.left
+            maxDescendant?.output.right = root.output.right
+            if maxDescendant?.key != maxDescendentParent?.output.left?.key{
+                maxDescendant?.output.left = root.output.left
             }
-            maxDescendentParent?.outputs.output.right = nil
+            maxDescendentParent?.output.right = nil
             self.root = maxDescendant
             
             return true
         }
         
-        if let leftNode = node.outputs.output.left, leftNode.key == deletingNode.key{
-            if leftNode.outputs.output.isLeaf {
-                node.outputs.output.left = nil
-            }else if let leaf = leftNode.outputs.output.hasOneLeaf{
-                node.outputs.output.left = leaf
+        if let leftNode = node.output.left, leftNode.key == deletingNode.key{
+            if leftNode.output.isLeaf {
+                node.output.left = nil
+            }else if let leaf = leftNode.output.hasOneLeaf{
+                node.output.left = leaf
                 
-            }else if leftNode.outputs.output.isFull{
-                let maxDescendant = findMax(leftNode.outputs.output.left)
+            }else if leftNode.output.isFull{
+                let maxDescendant = findMax(leftNode.output.left)
                 let maxDescendentParent = findParentOf(maxDescendant!.key)
-                maxDescendant?.outputs.output.right = leftNode.outputs.output.right
-                if maxDescendant?.key != maxDescendentParent?.outputs.output.left?.key{
-                    maxDescendant?.outputs.output.left = leftNode.outputs.output.left
+                maxDescendant?.output.right = leftNode.output.right
+                if maxDescendant?.key != maxDescendentParent?.output.left?.key{
+                    maxDescendant?.output.left = leftNode.output.left
                 }
-                maxDescendentParent?.outputs.output.right = nil
-                node.outputs.output.left = maxDescendant
+                maxDescendentParent?.output.right = nil
+                node.output.left = maxDescendant
                 
             }
             return true
-        }else if let rightNode = node.outputs.output.right, rightNode.key == deletingNode.key{
-            if rightNode.outputs.output.isLeaf {
-                node.outputs.output.right = nil
-            }else if let leaf = rightNode.outputs.output.hasOneLeaf{
-                node.outputs.output.right = leaf
-            }else if rightNode.outputs.output.isFull{
+        }else if let rightNode = node.output.right, rightNode.key == deletingNode.key{
+            if rightNode.output.isLeaf {
+                node.output.right = nil
+            }else if let leaf = rightNode.output.hasOneLeaf{
+                node.output.right = leaf
+            }else if rightNode.output.isFull{
                 // find max keyed node in left subtree and swap it.
                 // then delete big one
                 
-                let maxDescendant = findMax(rightNode.outputs.output.left)
+                let maxDescendant = findMax(rightNode.output.left)
                 let maxDescendentParent = findParentOf(maxDescendant!.key)
-                maxDescendant?.outputs.output.right = rightNode.outputs.output.right
+                maxDescendant?.output.right = rightNode.output.right
                 
-                if maxDescendant?.key != maxDescendentParent?.outputs.output.left?.key{
-                    maxDescendant?.outputs.output.left = rightNode.outputs.output.left
+                if maxDescendant?.key != maxDescendentParent?.output.left?.key{
+                    maxDescendant?.output.left = rightNode.output.left
                 }
                 
-                maxDescendentParent?.outputs.output.right = nil
-                node.outputs.output.right = maxDescendant
+                maxDescendentParent?.output.right = nil
+                node.output.right = maxDescendant
                 
             }
             return true
@@ -351,9 +346,9 @@ struct BinaryTree<T:Comparable>{
         if node.key == deletingNode.key {
             return true
         }else if node.key < deletingNode.key {
-            return delete(node.outputs.output.right, deletingNode: deletingNode)
+            return delete(node.output.right, deletingNode: deletingNode)
         }else if node.key > deletingNode.key {
-            return delete(node.outputs.output.left, deletingNode: deletingNode)
+            return delete(node.output.left, deletingNode: deletingNode)
         }else{return false}
         
     }
@@ -369,9 +364,9 @@ struct BinaryTree<T:Comparable>{
         }
         
         if node.key > element {
-            node.outputs.output.left = insert(element, to: node.outputs.output.left)
+            node.output.left = insert(element, to: node.output.left)
         }else{
-            node.outputs.output.right = insert(element, to: node.outputs.output.right)
+            node.output.right = insert(element, to: node.output.right)
         }
         
         return node
@@ -400,7 +395,7 @@ class TestedPlayground: XCTestCase {
             linkedList.append(4)
             XCTAssert(linkedList.last?.key == 4)
             linkedList.remove(after: linkedList.root!)
-            XCTAssert(linkedList.root?.outputs.output.next?.key == 2)
+            XCTAssert(linkedList.root?.output.next?.key == 2)
             linkedList.removeBeginning()
             XCTAssert(linkedList.root?.key == 2)
             linkedList.removeLast()
