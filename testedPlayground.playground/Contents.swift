@@ -5,7 +5,7 @@ import XCPlayground
 
 class Node<E, T:EmptyInitable>:CustomStringConvertible{
     let key:E
-    var outputs:Output<T> = Output<T>(output: T())
+    var outputs:Output<T> = Output<T>()
     init(_ key:E) {
         self.key = key
     }
@@ -45,7 +45,7 @@ protocol EmptyInitable{
     init()
     
 }
-struct Output<T:EmptyInitable>{
+struct Output<T:EmptyInitable>:EmptyInitable{
     
     var output:T = T()
     
@@ -379,7 +379,7 @@ struct BinaryTree<T:Comparable>{
     
 }
 
-class TodoTests: XCTestCase {
+class TestedPlayground: XCTestCase {
     
     override func setUp() {
         super.setUp()
@@ -517,4 +517,4 @@ class TodoTests: XCTestCase {
         }
 }
 
-TodoTests.defaultTestSuite().run()
+TestedPlayground.defaultTestSuite().run()
