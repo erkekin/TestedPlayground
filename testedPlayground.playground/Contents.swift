@@ -302,39 +302,39 @@ struct BinaryTree<T:Comparable>{
             return true
         }
         
-        if let leftNode = node.output.left, leftNode.key == deletingNode.key{
-            if leftNode.output.isLeaf {
+        if let child = node.output.left, child.key == deletingNode.key{
+            if child.output.isLeaf {
                 node.output.left = nil
-            }else if let leaf = leftNode.output.hasOneLeaf{
+            }else if let leaf = child.output.hasOneLeaf{
                 node.output.left = leaf
                 
-            }else if leftNode.output.isFull{
-                let maxDescendant = findMax(leftNode.output.left)
+            }else if child.output.isFull{
+                let maxDescendant = findMax(child.output.left)
                 let maxDescendentParent = findParentOf(maxDescendant!.key)
-                maxDescendant?.output.right = leftNode.output.right
+                maxDescendant?.output.right = child.output.right
                 if maxDescendant?.key != maxDescendentParent?.output.left?.key{
-                    maxDescendant?.output.left = leftNode.output.left
+                    maxDescendant?.output.left = child.output.left
                 }
                 maxDescendentParent?.output.right = nil
                 node.output.left = maxDescendant
                 
             }
             return true
-        }else if let rightNode = node.output.right, rightNode.key == deletingNode.key{
-            if rightNode.output.isLeaf {
+        }else if let child = node.output.right, child.key == deletingNode.key{
+            if child.output.isLeaf {
                 node.output.right = nil
-            }else if let leaf = rightNode.output.hasOneLeaf{
+            }else if let leaf = child.output.hasOneLeaf{
                 node.output.right = leaf
-            }else if rightNode.output.isFull{
+            }else if child.output.isFull{
                 // find max keyed node in left subtree and swap it.
                 // then delete big one
                 
-                let maxDescendant = findMax(rightNode.output.left)
+                let maxDescendant = findMax(child.output.left)
                 let maxDescendentParent = findParentOf(maxDescendant!.key)
-                maxDescendant?.output.right = rightNode.output.right
+                maxDescendant?.output.right = child.output.right
                 
                 if maxDescendant?.key != maxDescendentParent?.output.left?.key{
-                    maxDescendant?.output.left = rightNode.output.left
+                    maxDescendant?.output.left = child.output.left
                 }
                 
                 maxDescendentParent?.output.right = nil
