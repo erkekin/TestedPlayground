@@ -1,16 +1,24 @@
-//: Playground - noun: a place where people can play
+// https://www.cs.cmu.edu/~adamchik/15-121/lectures/Trees/trees.html
 
 import XCTest
 import XCPlayground
+import PlaygroundSupport
+
+protocol Container {
+    associatedtype Element
+    mutating func append(_ item: Element)
+}
 
 class Node<E, T:EmptyInitable>:CustomStringConvertible{
     let key:E
     var output:T = T()
+    
     init(_ key:E) {
         self.key = key
     }
-
+    
     var description:String{return "\(self.key)"}
+    
 }
 
 struct MultipleOutput<T>:EmptyInitable{
@@ -41,7 +49,7 @@ struct UnaryOutput<T>:EmptyInitable{
     
 }
 protocol EmptyInitable{
-
+    
     init()
     
 }
@@ -61,9 +69,8 @@ extension LinkedList:CustomStringConvertible{
     }
     
 }
-struct LinkedList<N>{
+struct LinkedList<N>:Container{
     var root:Node<N, UnaryOutput<N>>? = nil
-    
     var last:Node<N, UnaryOutput<N>>?{
         var current = root
         while current != nil {
@@ -125,7 +132,14 @@ struct LinkedList<N>{
 struct Queue<S> {
     var linkedlist = LinkedList<S>()
     mutating func enqueue(_ element:S){ linkedlist.append(element) }
-    mutating func dequeue(){ linkedlist.removeLast() }
+    mutating func dequeue() -> Node<S, UnaryOutput<S>>?{
+        
+        let a = linkedlist.last
+        
+        linkedlist.removeLast()
+        
+        return a
+    }
 }
 
 struct Stack<S> {
@@ -200,7 +214,6 @@ struct Traverser<T>{
     
 }
 
-
 struct BinaryTree<T:Comparable>{
     
     init(_ elements: [T]) {
@@ -266,6 +279,7 @@ struct BinaryTree<T:Comparable>{
     
     private func findParentOf(_ node:Node<T, BinaryOutput<T>>?, element:T) -> Node<T, BinaryOutput<T>>?{
         guard let node = node else{return nil}
+        
         if let left = node.output.left, left.key == element {
             return node
         }else if let right = node.output.right, right.key == element {
@@ -326,8 +340,6 @@ struct BinaryTree<T:Comparable>{
             }else if let leaf = child.output.hasOneLeaf{
                 node.output.right = leaf
             }else if child.output.isFull{
-                // find max keyed node in left subtree and swap it.
-                // then delete big one
                 
                 let maxDescendant = findMax(child.output.left)
                 let maxDescendentParent = findParentOf(maxDescendant!.key)
@@ -361,9 +373,7 @@ struct BinaryTree<T:Comparable>{
         
         if node.key == element{
             return node
-        }
-        
-        if node.key > element {
+        }else if node.key > element {
             node.output.left = insert(element, to: node.output.left)
         }else{
             node.output.right = insert(element, to: node.output.right)
@@ -384,132 +394,146 @@ class TestedPlayground: XCTestCase {
         super.tearDown()
     }
     
-        func testLinkedList(){
-            var linkedList = LinkedList<Int>()
-            linkedList.append(1)
-            XCTAssert(linkedList.last?.key == 1)
-            linkedList.append(2)
-            XCTAssert(linkedList.last?.key == 2)
-            linkedList.insert(element: 3, after: linkedList.root!)
-            XCTAssert(linkedList.last?.key == 2)
-            linkedList.append(4)
-            XCTAssert(linkedList.last?.key == 4)
-            linkedList.remove(after: linkedList.root!)
-            XCTAssert(linkedList.root?.output.next?.key == 2)
-            linkedList.removeBeginning()
-            XCTAssert(linkedList.root?.key == 2)
-            linkedList.removeLast()
-            XCTAssert(linkedList.last!.key == 2)
-            linkedList.insertBeginning(5)
-            XCTAssert(linkedList.root?.key == 5)
-        }
+    func testLinkedList(){
+        var linkedList = LinkedList<Int>()
+        linkedList.append(1)
+        XCTAssert(linkedList.last?.key == 1)
+        linkedList.append(2)
+        XCTAssert(linkedList.last?.key == 2)
+        linkedList.insert(element: 3, after: linkedList.root!)
+        XCTAssert(linkedList.last?.key == 2)
+        linkedList.append(4)
+        XCTAssert(linkedList.last?.key == 4)
+        linkedList.remove(after: linkedList.root!)
+        XCTAssert(linkedList.root?.output.next?.key == 2)
+        linkedList.removeBeginning()
+        XCTAssert(linkedList.root?.key == 2)
+        linkedList.removeLast()
+        XCTAssert(linkedList.last!.key == 2)
+        linkedList.insertBeginning(5)
+        XCTAssert(linkedList.root?.key == 5)
+    }
     
-        func testStack(){
-            var stack = Stack<Int>()
-            stack.push(1)
-            stack.linkedlist
-            stack.push(2)
-            stack.linkedlist
-            XCTAssert(stack.top == 2)
-            stack.linkedlist
-            XCTAssert(stack.pop() == 2)
-            stack.linkedlist
-            XCTAssert(stack.pop() == 1)
-            stack.linkedlist
-            stack.push(2)
-            stack.linkedlist
-            XCTAssert(stack.top == 2)
-            stack.linkedlist
-            stack.pop()
-            stack.linkedlist
-            XCTAssert(stack.top == nil)
-        }
+    func testStack(){
+        var stack = Stack<Int>()
+        stack.push(1)
+        stack.linkedlist
+        stack.push(2)
+        stack.linkedlist
+        XCTAssert(stack.top == 2)
+        stack.linkedlist
+        XCTAssert(stack.pop() == 2)
+        stack.linkedlist
+        XCTAssert(stack.pop() == 1)
+        stack.linkedlist
+        stack.push(2)
+        stack.linkedlist
+        XCTAssert(stack.top == 2)
+        stack.linkedlist
+        stack.pop()
+        stack.linkedlist
+        XCTAssert(stack.top == nil)
+    }
     
-        func testQueue(){
-            var queue = Queue<Int>()
-            queue.enqueue(1)
-            queue.enqueue(2)
-            queue.enqueue(3)
-            queue.linkedlist
-            queue.dequeue()
-            queue.linkedlist
-            queue.dequeue()
-            queue.linkedlist
-            queue.dequeue()
-            queue.linkedlist
-        }
-        func testBinaryTreePart2(){
-            var binaryTree = BinaryTree<Int>( [11, 6, 8, 19, 4, 10, 5, 17, 43, 49, 31,16,18])
-    
-            // DELETE
-            // node is full
-            binaryTree.delete(6)
-            XCTAssert(binaryTree.print(method: .preorder) == [11, 5, 4, 8, 10, 19, 17, 16, 18, 43, 31, 49])
+    func testQueue(){
+        var queue = Queue<Int>()
+        queue.enqueue(1)
+        queue.enqueue(2)
+        queue.enqueue(3)
+        queue.linkedlist
+        queue.dequeue()
+        queue.linkedlist
+        queue.dequeue()
+        queue.linkedlist
+        queue.dequeue()
+        queue.linkedlist
+    }
     
     
-            binaryTree.delete(19)
-            XCTAssert(binaryTree.print(method: .preorder) == [11, 5, 4, 8, 10, 18, 17, 16, 43, 31, 49])
+    func testPalindrome(){
+        var queue = Queue<String>()
+        let palindrome = "radar"
+        palindrome.characters.forEach{queue.enqueue("\($0)")}
+        var stack = Stack<String>()
+        palindrome.characters.forEach{stack.push("\($0)")}
+        
+        XCTAssert(  queue.linkedlist.description == stack.linkedlist.description )
+        
+    }
     
-        }
+    func testBinaryTreePart2(){
+        var binaryTree = BinaryTree<Int>( [11, 6, 8, 19, 4, 10, 5, 17, 43, 49, 31,16,18])
+        
+        // DELETE
+        // node is full
+        binaryTree.delete(6)
+        XCTAssert(binaryTree.print(method: .preorder) == [11, 5, 4, 8, 10, 19, 17, 16, 18, 43, 31, 49])
+        
+        
+        binaryTree.delete(19)
+        XCTAssert(binaryTree.print(method: .preorder) == [11, 5, 4, 8, 10, 18, 17, 16, 43, 31, 49])
+        
+    }
     
-        func testBinaryTreePart1(){
-            var binaryTree = BinaryTree<Int>( [11, 6, 8, 19, 4, 10, 5, 17, 43, 49, 31])
-            binaryTree.insert(11)
-            XCTAssert( binaryTree.numberOfLeaves == 5 )
-            XCTAssert( binaryTree.height == 4 )
+    func testBinaryTreePart1(){
+        var binaryTree = BinaryTree<Int>( [11, 6, 8, 19, 4, 10, 5, 17, 43, 49, 31])
+        binaryTree.insert(11)
+        XCTAssert( binaryTree.numberOfLeaves == 5 )
+        XCTAssert( binaryTree.height == 4 )
+        
+        XCTAssert( binaryTree.print(method: .preorder) == [11, 6, 4, 5, 8, 10, 19, 17, 43, 31, 49])
+        XCTAssert( binaryTree.print(method: .inorder) == [4, 5, 6, 8, 10, 11, 17, 19, 31, 43, 49]) // ordered
+        XCTAssert( binaryTree.print(method: .postorder) == [5, 4, 10, 8, 6, 17, 31, 49, 43, 19, 11])
+        XCTAssert( binaryTree.numberOfLeaves == 5 )
+        XCTAssert( binaryTree.height == 4 )
+        
+        let found = binaryTree.search(19)
+        XCTAssert( found?.key == 19)
+        
+        
+        // DELETE
+        // node is leaf
+        let fourty_nine = binaryTree.delete(49)
+        XCTAssert(binaryTree.print(method: .preorder) == [11, 6, 4, 5, 8, 10, 19, 17, 43, 31])
+        
+        XCTAssert( fourty_nine == true)
+        XCTAssert( binaryTree.delete(49) == false)
+        binaryTree.insert(49)
+        
+        //        // node has only one leaf
+        let four = binaryTree.delete(4)
+        
+        XCTAssert( four == true)
+        let fourAgain = binaryTree.delete(4)
+        XCTAssert( fourAgain == false)
+        // node has only one leaf
+        let five = binaryTree.delete(5)
+        XCTAssert( five == true)
+        let fiveAgain = binaryTree.delete(5)
+        XCTAssert( fiveAgain == false)
+        // node has only one leaf
+        let eight = binaryTree.delete(8)
+        XCTAssert( eight == true)
+        let eightAgain = binaryTree.delete(8)
+        XCTAssert( eightAgain == false)
+        
+        // node has only one leaf
+        binaryTree.delete(43)
+        XCTAssert(binaryTree.findParentOf(31)?.key == 19)
+        XCTAssert( binaryTree.search(43) == nil)
+        
+        XCTAssert(binaryTree.findParentOf(31)?.key == 19)
+        XCTAssert(binaryTree.findParentOf(49)?.key == 31)
+        
+    }
     
-            XCTAssert( binaryTree.print(method: .preorder) == [11, 6, 4, 5, 8, 10, 19, 17, 43, 31, 49])
-            XCTAssert( binaryTree.print(method: .inorder) == [4, 5, 6, 8, 10, 11, 17, 19, 31, 43, 49]) // ordered
-            XCTAssert( binaryTree.print(method: .postorder) == [5, 4, 10, 8, 6, 17, 31, 49, 43, 19, 11])
-            XCTAssert( binaryTree.numberOfLeaves == 5 )
-            XCTAssert( binaryTree.height == 4 )
-    
-            let found = binaryTree.search(19)
-            XCTAssert( found?.key == 19)
-    
-    
-            // DELETE
-            // node is leaf
-            let fourty_nine = binaryTree.delete(49)
-            XCTAssert(binaryTree.print(method: .preorder) == [11, 6, 4, 5, 8, 10, 19, 17, 43, 31])
-    
-            XCTAssert( fourty_nine == true)
-            XCTAssert( binaryTree.delete(49) == false)
-            binaryTree.insert(49)
-    
-            //        // node has only one leaf
-            let four = binaryTree.delete(4)
-    
-            XCTAssert( four == true)
-            let fourAgain = binaryTree.delete(4)
-            XCTAssert( fourAgain == false)
-            // node has only one leaf
-            let five = binaryTree.delete(5)
-            XCTAssert( five == true)
-            let fiveAgain = binaryTree.delete(5)
-            XCTAssert( fiveAgain == false)
-            // node has only one leaf
-            let eight = binaryTree.delete(8)
-            XCTAssert( eight == true)
-            let eightAgain = binaryTree.delete(8)
-            XCTAssert( eightAgain == false)
-    
-            // node has only one leaf
-            binaryTree.delete(43)
-            XCTAssert(binaryTree.findParentOf(31)?.key == 19)
-            XCTAssert( binaryTree.search(43) == nil)
-    
-            XCTAssert(binaryTree.findParentOf(31)?.key == 19)
-            XCTAssert(binaryTree.findParentOf(49)?.key == 31)
-    
-        }
-    
-        func testBinaryTreeDeleteRoot(){
-            var binaryTree = BinaryTree<Int>([11, 6, 8, 19, 4, 10, 5, 17, 43, 49, 31])
-    
-            binaryTree.delete(11)
-            XCTAssert(binaryTree.print(method: .preorder) == [10, 6, 4, 5, 8, 19, 17, 43, 31, 49])
-        }
+    func testBinaryTreeDeleteRoot(){
+        var binaryTree = BinaryTree<Int>([11, 6, 8, 19, 4, 10, 5, 17, 43, 49, 31])
+        
+        binaryTree.delete(11)
+        XCTAssert(binaryTree.print(method: .preorder) == [10, 6, 4, 5, 8, 19, 17, 43, 31, 49])
+    }
 }
+
 
 TestedPlayground.defaultTestSuite().run()
