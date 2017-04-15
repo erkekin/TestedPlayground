@@ -5,6 +5,7 @@ import XCPlayground
 import PlaygroundSupport
 
 protocol Container {
+    
     associatedtype Element
     mutating func append(_ item: Element)
 }
@@ -27,11 +28,11 @@ struct MultipleOutput<T>:EmptyInitable{
     
 }
 struct BinaryOutput<T>:EmptyInitable{
+    typealias BinaryNode = Node<T, BinaryOutput<T>>
+    var left: BinaryNode? = nil
+    var right:BinaryNode? = nil
     
-    var left: Node<T, BinaryOutput<T>>? = nil
-    var right:Node<T, BinaryOutput<T>>? = nil
-    
-    var hasOneLeaf:Node<T, BinaryOutput<T>>?{
+    var hasOneLeaf:BinaryNode?{
         
         let a = [right, left].flatMap{$0}
         if a.count == 1{return a.first!}else{return nil}
@@ -64,14 +65,16 @@ extension LinkedList:CustomStringConvertible{
             current = current!.output.next
         }
         
-        return keys.joined(separator: " -> ")
+        return keys.joined(separator:" -> ")
         
     }
     
 }
 struct LinkedList<N>:Container{
-    var root:Node<N, UnaryOutput<N>>? = nil
-    var last:Node<N, UnaryOutput<N>>?{
+    
+    typealias UnaryNode = Node<N, UnaryOutput<N>>
+    var root:UnaryNode? = nil
+    var last:UnaryNode?{
         var current = root
         while current != nil {
             if current?.output.next == nil {
@@ -85,7 +88,7 @@ struct LinkedList<N>:Container{
     }
     
     mutating func append(_ element:N){
-        let newRoot = Node<N, UnaryOutput<N>>(element)
+        let newRoot = UnaryNode(element)
         guard let _ = root else{
             self.root = newRoot
             return
@@ -93,17 +96,17 @@ struct LinkedList<N>:Container{
         last?.output.next = newRoot
     }
     
-    mutating func insert(element:N, after node:Node<N, UnaryOutput<N>>){
-        let newRoot = Node<N, UnaryOutput<N>>(element)
+    mutating func insert(element:N, after node:UnaryNode){
+        let newRoot = UnaryNode(element)
         newRoot.output.next = node.output.next
         node.output.next = newRoot
     }
     
-    mutating func remove(after node:Node<N, UnaryOutput<N>>){
+    mutating func remove(after node:UnaryNode){
         node.output.next = node.output.next?.output.next
     }
     mutating func insertBeginning(_ element:N){
-        let newRoot = Node<N, UnaryOutput<N>>(element)
+        let newRoot = UnaryNode(element)
         newRoot.output.next = root
         root = newRoot
     }
@@ -131,14 +134,16 @@ struct LinkedList<N>:Container{
 
 struct Queue<S> {
     var linkedlist = LinkedList<S>()
+    var isEmpty:Bool{
+        return linkedlist.root == nil
+    }
     mutating func enqueue(_ element:S){ linkedlist.append(element) }
-    mutating func dequeue() -> Node<S, UnaryOutput<S>>?{
+    mutating func dequeue() -> S?{
+        guard let root = linkedlist.root else{return nil}
         
-        let a = linkedlist.last
+        linkedlist.removeBeginning()
         
-        linkedlist.removeLast()
-        
-        return a
+        return root.key
     }
 }
 
@@ -163,16 +168,18 @@ enum TraverseMethod{
 }
 
 struct Traverser<T>{
-    var nodes = [Node<T, BinaryOutput<T>>]()
-    let method:TraverseMethod
-    let process:(Node<T, BinaryOutput<T>>) -> ()
     
-    init(method:TraverseMethod, process:@escaping (Node<T, BinaryOutput<T>>) -> ()) {
+    typealias BinaryNode = Node<T, BinaryOutput<T>>
+    var nodes = [BinaryNode]()
+    let method:TraverseMethod
+    let process:(BinaryNode) -> ()
+    
+    init(method:TraverseMethod, process:@escaping (BinaryNode) -> ()) {
         self.process = process
         self.method = method
     }
     
-    mutating func preorder(_ node: Node<T, BinaryOutput<T>>){
+    mutating func preorder(_ node: BinaryNode){
         
         process(node)
         nodes.append(node)
@@ -181,7 +188,7 @@ struct Traverser<T>{
         
     }
     
-    mutating func inorder(_ node: Node<T, BinaryOutput<T>>){
+    mutating func inorder(_ node: BinaryNode){
         
         traverse(node.output.left)
         process(node)
@@ -190,7 +197,7 @@ struct Traverser<T>{
         
     }
     
-    mutating func postorder(_ node: Node<T, BinaryOutput<T>>){
+    mutating func postorder(_ node: BinaryNode){
         
         traverse(node.output.left)
         traverse(node.output.right)
@@ -199,7 +206,7 @@ struct Traverser<T>{
         
     }
     
-    mutating func traverse(_ node:Node<T, BinaryOutput<T>>?){
+    mutating func traverse(_ node:BinaryNode?){
         guard let node = node else {return}
         
         switch method {
@@ -215,12 +222,12 @@ struct Traverser<T>{
 }
 
 struct BinaryTree<T:Comparable>{
-    
+    typealias BinaryNode = Node<T, BinaryOutput<T>>
     init(_ elements: [T]) {
         elements.forEach{insert($0) }
     }
     
-    var root:Node<T, BinaryOutput<T>>? = nil
+    var root:BinaryNode? = nil
     var numberOfLeaves:Int{
         var _numberOfLeaves = 0
         var traverser = Traverser<T>(method:.preorder, process: {node in
@@ -241,20 +248,39 @@ struct BinaryTree<T:Comparable>{
         return traverser.nodes.map{$0.key}
     }
     
+    func levelOrderQueue() -> [T]{
+        var traverse = [T]()
+        guard let root = root else{return []}
+        var q = Queue<BinaryNode>()
+        q.enqueue(root)
+        
+        while !q.isEmpty {
+            
+            let removed = q.dequeue()
+            traverse.append(removed!.key)
+            
+            [removed?.output.left, removed?.output.right].flatMap{$0}.forEach{element in
+                q.enqueue(element)
+            }
+        }
+        
+        return traverse
+    }
+    
     var height:Int{
         return height(root)
     }
     
-    private func height(_ node:Node<T, BinaryOutput<T>>?) -> Int{
+    private func height(_ node:BinaryNode?) -> Int{
         guard let node = node else{return 0}
         return 1 + max( height(node.output.left), height(node.output.right))
     }
     
-    func search(_ element:T) -> Node<T, BinaryOutput<T>>?{
+    func search(_ element:T) -> BinaryNode?{
         return search(root, element: element)
     }
     
-    private func search(_ node:Node<T, BinaryOutput<T>>?, element:T) -> Node<T, BinaryOutput<T>>?{
+    private func search(_ node:Node<T, BinaryOutput<T>>?, element:T) -> BinaryNode?{
         guard let node = node else{return nil}
         if node.key < element
         {return search(node.output.right, element:element)}
@@ -264,7 +290,7 @@ struct BinaryTree<T:Comparable>{
     }
     
     
-    func findMax(_ node:Node<T, BinaryOutput<T>>?) -> Node<T, BinaryOutput<T>>?{
+    func findMax(_ node:BinaryNode?) -> BinaryNode?{
         guard let node = node else{return nil}
         if node.output.isLeaf {
             return node
@@ -272,12 +298,12 @@ struct BinaryTree<T:Comparable>{
         return findMax(node.output.right)
     }
     
-    func findParentOf(_ element:T) -> Node<T, BinaryOutput<T>>?{
+    func findParentOf(_ element:T) -> BinaryNode?{
         return findParentOf(root, element:element)
         
     }
     
-    private func findParentOf(_ node:Node<T, BinaryOutput<T>>?, element:T) -> Node<T, BinaryOutput<T>>?{
+    private func findParentOf(_ node:BinaryNode?, element:T) -> BinaryNode?{
         guard let node = node else{return nil}
         
         if let left = node.output.left, left.key == element {
@@ -299,7 +325,7 @@ struct BinaryTree<T:Comparable>{
         return delete(root, deletingNode: deletingNode)
     }
     
-    mutating private func delete(_ node:Node<T, BinaryOutput<T>>?, deletingNode:Node<T, BinaryOutput<T>>) -> Bool{
+    mutating private func delete(_ node:BinaryNode?, deletingNode:BinaryNode) -> Bool{
         guard let node = node else{return false}
         guard root?.key != deletingNode.key else{
             
@@ -365,9 +391,9 @@ struct BinaryTree<T:Comparable>{
         
     }
     
-    mutating func insert(_ element:T, to node:Node<T, BinaryOutput<T>>?) -> Node<T, BinaryOutput<T>>{
+    mutating func insert(_ element:T, to node:BinaryNode?) -> BinaryNode{
         guard let node = node else{
-            let newNode = Node<T, BinaryOutput<T>>(element)
+            let newNode = BinaryNode(element)
             return newNode
         }
         
@@ -477,6 +503,8 @@ class TestedPlayground: XCTestCase {
     
     func testBinaryTreePart1(){
         var binaryTree = BinaryTree<Int>( [11, 6, 8, 19, 4, 10, 5, 17, 43, 49, 31])
+        
+        XCTAssert(  binaryTree.levelOrderQueue() == [11, 6 , 19, 4,8,17,43, 5,10,31,49] )
         binaryTree.insert(11)
         XCTAssert( binaryTree.numberOfLeaves == 5 )
         XCTAssert( binaryTree.height == 4 )
@@ -529,7 +557,6 @@ class TestedPlayground: XCTestCase {
     
     func testBinaryTreeDeleteRoot(){
         var binaryTree = BinaryTree<Int>([11, 6, 8, 19, 4, 10, 5, 17, 43, 49, 31])
-        
         binaryTree.delete(11)
         XCTAssert(binaryTree.print(method: .preorder) == [10, 6, 4, 5, 8, 19, 17, 43, 31, 49])
     }
